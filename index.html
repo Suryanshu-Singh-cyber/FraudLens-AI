@@ -371,177 +371,6 @@
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-  const tableBody = document.getElementById("transactionTableBody");
-  const detailsModal = document.getElementById("detailsModal");
-  const detailsContent = document.getElementById("detailsContent");
-  const closeDetails = document.getElementById("closeDetails");
-
-  // Example Transactions
-  const exampleTransactions = [
-    { id: "TXN1001", amount: 2500, time: "14:32", receiver: "Known", status: "Safe ✅", color: "bg-green-600 text-white", details: {location:"Delhi", device:"Mobile", ip:"123.45.67.89", reason:"Normal payment"} },
-    { id: "TXN1002", amount: 42000, time: "11:10", receiver: "New", status: "⚠️ Medium", color: "bg-yellow-500 text-black", details: {location:"Mumbai", device:"Laptop", ip:"98.76.54.32", reason:"New payee"} },
-    { id: "TXN1003", amount: 78000, time: "23:50", receiver: "New", status: "🚨 Suspicious", color: "bg-red-600 text-white", details: {location:"Kolkata", device:"Unknown", ip:"77.88.99.11", reason:"High amount + midnight + new payee"} },
-  ];
-
-  function renderTransaction(tx, prepend=false){
-    const row = document.createElement("tr");
-    row.className = tx.color + " hover:scale-[1.02] transition-all";
-    row.innerHTML = `
-      <td class="px-4 py-2">${tx.id}</td>
-      <td class="px-4 py-2">₹${tx.amount}</td>
-      <td class="px-4 py-2">${tx.time}</td>
-      <td class="px-4 py-2">${tx.receiver}</td>
-      <td class="px-4 py-2 font-bold">${tx.status}</td>
-      <td class="px-4 py-2">
-        <button class="detailsBtn bg-white text-indigo-700 px-2 py-1 rounded text-sm">Details</button>
-      </td>
-    `;
-    if(prepend){ tableBody.prepend(row); }
-    else{ tableBody.appendChild(row); }
-    row.querySelector(".detailsBtn").addEventListener("click", () => showDetails(tx));
-  }
-
-  function showDetails(tx){
-    detailsContent.innerHTML = `
-      <p><strong>Txn ID:</strong> ${tx.id}</p>
-      <p><strong>Amount:</strong> ₹${tx.amount}</p>
-      <p><strong>Time:</strong> ${tx.time}</p>
-      <p><strong>Receiver:</strong> ${tx.receiver}</p>
-      <p><strong>Status:</strong> ${tx.status}</p>
-      <p><strong>Location:</strong> ${tx.details.location}</p>
-      <p><strong>Device:</strong> ${tx.details.device}</p>
-      <p><strong>IP:</strong> ${tx.details.ip}</p>
-      <p><strong>Reason:</strong> ${tx.details.reason}</p>
-    `;
-    detailsModal.classList.remove("hidden");
-  }
-
-  closeDetails.addEventListener("click", ()=> detailsModal.classList.add("hidden"));
-
-  // Load example transactions
-  exampleTransactions.forEach(tx => renderTransaction(tx));
-
-  // Add transaction from form
-  window.addTransactionFromForm = function() {
-    const id = document.getElementById('newTxID').value || "TXN" + Math.floor(Math.random()*10000);
-    const amount = parseInt(document.getElementById('newTxAmount').value);
-    const time = document.getElementById('newTxTime').value;
-    const receiver = document.getElementById('newTxReceiver').value;
-
-    if (!amount || !time) { alert("Please enter valid amount and time"); return; }
-
-    // Simple risk calculation (can integrate ML later)
-    let risk = 0;
-    let status = "Safe ✅";
-    let color = "bg-green-600 text-white";
-    let reason = "Normal transaction";
-
-    if(amount > 40000) { risk += 40; reason = "High amount"; }
-    const [hour] = time.split(":").map(Number);
-    if(hour >= 22 || hour <= 6){ risk += 30; reason += " + Late night"; }
-    if(receiver === "New"){ risk += 30; reason += " + New payee"; }
-
-    if(risk > 70){ status = "🚨 Suspicious"; color="bg-red-600 text-white"; }
-    else if(risk > 40){ status = "⚠️ Medium"; color="bg-yellow-500 text-black"; }
-
-    const tx = { id, amount, time, receiver, status, color, details: {location:"Unknown", device:"Browser", ip:"127.0.0.1", reason} };
-    renderTransaction(tx,true);
-
-    // Clear form
-    document.getElementById('newTxID').value = '';
-    document.getElementById('newTxAmount').value = '';
-    document.getElementById('newTxTime').value = '';
-    document.getElementById('newTxReceiver').value = 'Known';
-  }
-});
-ocument.addEventListener('DOMContentLoaded', () => {
-  // Add selection checkbox for each row
-  function renderTransactionWithCheckbox(tx, prepend=false) {
-    const row = document.createElement("tr");
-    row.className = tx.color + " hover:scale-[1.02] transition-all";
-    row.innerHTML = `
-      <td class="px-4 py-2"><input type="checkbox" class="tx-checkbox"></td>
-      <td class="px-4 py-2">${tx.id}</td>
-      <td class="px-4 py-2">₹${tx.amount}</td>
-      <td class="px-4 py-2">${tx.time}</td>
-      <td class="px-4 py-2">${tx.receiver}</td>
-      <td class="px-4 py-2 font-bold">${tx.status}</td>
-      <td class="px-4 py-2">
-        <button class="detailsBtn bg-white text-indigo-700 px-2 py-1 rounded text-sm">Details</button>
-      </td>
-    `;
-    if(prepend){ tableBody.prepend(row); }
-    else{ tableBody.appendChild(row); }
-    row.querySelector(".detailsBtn").addEventListener("click", () => showDetails(tx));
-  }
-
-  // Replace old renderTransaction calls with new one
-  tableBody.innerHTML = ""; // Clear existing
-  exampleTransactions.forEach(tx => renderTransactionWithCheckbox(tx));
-
-  // MARK SELECTED SAFE
-  document.getElementById("bulkSafeBtn").addEventListener("click", () => {
-    const checkboxes = document.querySelectorAll(".tx-checkbox");
-    checkboxes.forEach((chk, index) => {
-      if(chk.checked){
-        const row = chk.closest("tr");
-        row.className = "bg-green-600 text-white hover:scale-[1.02] transition-all";
-        row.cells[5].innerText = "Safe ✅";
-        chk.checked = false;
-      }
-    });
-    alert("Selected transactions marked as Safe ✅");
-  });
-
-  // EXPORT VISIBLE CSV
-  document.getElementById("exportCSV2").addEventListener("click", () => {
-    const rows = Array.from(tableBody.querySelectorAll("tr"));
-    const csv = rows.map(row => {
-      return Array.from(row.cells).slice(1,6).map(cell => cell.innerText).join(",");
-    });
-    const csvContent = "data:text/csv;charset=utf-8," + ["Txn ID,Amount,Time,Receiver,Status", ...csv].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "transactions.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-
-  // APPLY FILTERS
-  document.getElementById("applyFiltersBtn").addEventListener("click", () => {
-    const search = document.getElementById("filterSearch").value.toLowerCase();
-    const riskFilter = document.getElementById("filterRisk").value;
-    const channelFilter = document.getElementById("filterChannel").value;
-    const dateFilter = document.getElementById("filterDate").value;
-
-    tableBody.innerHTML = ""; // clear table
-    exampleTransactions.forEach(tx => {
-      let include = true;
-
-      if(search && !tx.id.toLowerCase().includes(search) && !tx.details.ip.toLowerCase().includes(search) && !tx.details.device.toLowerCase().includes(search)) {
-        include = false;
-      }
-
-      if(riskFilter === "high" && !tx.status.includes("🚨")) include = false;
-      if(riskFilter === "medium" && !tx.status.includes("⚠️")) include = false;
-      if(riskFilter === "low" && !tx.status.includes("Safe")) include = false;
-
-      if(channelFilter !== "all" && tx.receiver.toUpperCase() !== channelFilter.toUpperCase()) include = false;
-
-      // dateFilter can be integrated if transactions have date property
-
-      if(include) renderTransactionWithCheckbox(tx);
-    });
-  });
-});
-</script>
-
-
   <!-- POLICE DASHBOARD -->
 <!-- ================= POLICE DASHBOARD ================= -->
 <section id="police" class="hidden p-10 md:p-16 bg-gray-900 min-h-screen text-white">
@@ -907,24 +736,35 @@ ocument.addEventListener('DOMContentLoaded', () => {
         alert('Failed to send OTP via EmailJS. OTP (dev): ' + otp);
       }
     }
-
-    document.getElementById('modalVerifyBtn').addEventListener('click', () => {
-      const entered = (document.getElementById('otpModalInput').value || '').trim();
-      if (!entered) { document.getElementById('modalOtpHint').textContent = 'Enter the OTP.'; return; }
-      if (Date.now() > otpExpiresAt) { document.getElementById('modalOtpHint').textContent = 'OTP expired. Please resend.'; return; }
-      if (entered === currentOTP) {
+document.getElementById('modalVerifyBtn').addEventListener('click', () => {
+    const entered = (document.getElementById('otpModalInput').value || '').trim();
+    if (!entered) { 
+        document.getElementById('modalOtpHint').textContent = 'Enter the OTP.'; 
+        return; 
+    }
+    if (Date.now() > otpExpiresAt) { 
+        document.getElementById('modalOtpHint').textContent = 'OTP expired. Please resend.'; 
+        return; 
+    }
+    if (entered === currentOTP) {
+        // This line gets the role ('bank' or 'police') that was selected during login
         const role = localStorage.getItem('cs_role') || pendingRole || 'bank';
+        
         showLoginMessage('OTP verified — welcome!', '#86efac');
-        hideOtpModal(); currentOTP = null;
-        // route into app
-        if (role === 'police') showPage('police');
-        else showPage('bank-dashboard');
-        // refresh bank data when entering bank view
-        if (role === 'bank') renderBankView('dashboard');
-      } else { document.getElementById('modalOtpHint').textContent = 'Incorrect OTP. Try again or resend.'; }
-    });
+        hideOtpModal(); 
+        currentOTP = null;
+        
+        // This logic sends the user to the correct place based on their role
+        if (role === 'police') {
+            showPage('police');
+        } else {
+            window.location.href = 'https://fraud-detection-dashboard.web.app';
+        }
 
-    document.getElementById('modalResendBtn').addEventListener('click', async () => {
+    } else { 
+        document.getElementById('modalOtpHint').textContent = 'Incorrect OTP. Try again or resend.'; 
+    }
+});    document.getElementById('modalResendBtn').addEventListener('click', async () => {
       if (!pendingEmail) { document.getElementById('modalOtpHint').textContent = 'No pending login — please login first.'; return; }
       if (Date.now() < resendAvailableAt) { const sec = Math.ceil((resendAvailableAt - Date.now()) / 1000); document.getElementById('modalOtpHint').textContent = `Wait ${sec}s before resending.`; return; }
       currentOTP = generateOTP(); otpExpiresAt = Date.now() + (5 * 60 * 1000); resendAvailableAt = Date.now() + (30 * 1000);
@@ -1329,6 +1169,7 @@ ocument.addEventListener('DOMContentLoaded', () => {
     window.renderBankView = renderBankView;
   </script>
   <!-- =================== Advanced FraudLens AI Chatbot =================== -->
+<!-- =================== Advanced FraudLens AI Chatbot =================== -->
 <div id="chatWidgetPro" class="fixed bottom-5 right-5 w-80 max-w-full bg-gray-900 text-white rounded-xl shadow-lg overflow-hidden z-50 transition-all">
   <div id="chatHeaderPro" class="bg-blue-600 p-3 cursor-pointer font-bold flex justify-between items-center">
     <span>💬 FraudLens AI Assistant</span>
@@ -1437,6 +1278,7 @@ document.addEventListener("DOMContentLoaded", function() {
   100% { opacity: 0.5; }
 }
 </style>
+
 
 </body>
 </html>
